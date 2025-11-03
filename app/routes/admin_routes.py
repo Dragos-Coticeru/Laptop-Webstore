@@ -155,22 +155,64 @@ REPORT_MAP = {
     "laptops_not_in_cart": "dbo.rpt_LaptopsNotInAnyCartAbovePrice",
     "categories_with_high_stock": "dbo.rpt_CategoriesWithHighStock_NotSold",
     "no_payment_users": "dbo.rpt_NoPaymentUsersSinceYear",
+    # new examples:
+    "brand_revenue": "dbo.rpt_BrandRevenue",
+    "unsold_inventory_risk": "dbo.rpt_UnsoldInventoryRisk",  # takes 1 param: MinUnits
 }
+
+REPORT_PARAMS = {
+    "laptops_by_brand":       [{"name":"BrandName", "type":"text"}],
+    "popular_brands":         [{"name":"MinCount", "type":"int"}],
+    "total_orders_by_user":   [{"name":"MinTotalAmount", "type":"decimal"}],
+    "popular_categories":     [{"name":"MinCount", "type":"int"}],
+    "total_stock_by_brand":   [{"name":"BrandName", "type":"text"}],
+    "average_price_by_category":[{"name":"CategoryName", "type":"text"}],
+    "most_expensive_laptop_by_brand":[{"name":"BrandName", "type":"text"}],
+    "users_with_high_spending":[{"name":"MinAmount", "type":"decimal"}],
+    "laptops_not_in_cart":    [{"name":"MinPrice", "type":"decimal"}],
+    "categories_with_high_stock":[{"name":"MinPrice", "type":"decimal"}],
+    "no_payment_users":       [{"name":"Year", "type":"int"}],
+
+    # examples with multiple params
+    "brand_revenue": [
+        {"name":"StartDate",  "type":"date"},
+        {"name":"EndDate",    "type":"date"},
+        {"name":"MinRevenue", "type":"decimal"}
+    ],
+    # your 1-param SP version
+    "unsold_inventory_risk": [{"name":"MinUnits","type":"int"}],
+}
+
+def _cast(value, typ):
+    if value is None:
+        return None
+    try:
+        if typ == "int":
+            return int(value)
+        if typ == "decimal" or typ == "float":
+            return float(value)
+        # for date we can pass string 'YYYY-MM-DD' to SQL Server
+        return value  # text/date default
+    except:
+        return value
+
 
 @adminRoutes_blueprint.route('/admin/execute_query/<query_name>', methods=['GET'])
 def execute_query(query_name):
-    param = request.args.get('param', None)
     sp_name = REPORT_MAP.get(query_name)
     if not sp_name:
         return jsonify({"success": False, "message": "Invalid query name."})
 
+    # Build ordered params from schema
+    param_defs = REPORT_PARAMS.get(query_name, [])
+    params = []
+    for d in param_defs:
+        raw = request.args.get(d["name"])
+        params.append(_cast(raw, d.get("type")))
+
     try:
         conn = get_db_connection(); cur = conn.cursor()
-        if param is None or str(param).strip() == "":
-            call_sp(cur, sp_name, ())
-        else:
-            call_sp(cur, sp_name, (param,))
-
+        call_sp(cur, sp_name, tuple(params))
         rows = cur.fetchall() if cur.description else []
         cols = [c[0] for c in cur.description] if cur.description else []
         results = [dict(zip(cols, r)) for r in rows] if cols else []

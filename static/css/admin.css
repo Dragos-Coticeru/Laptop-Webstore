@@ -183,3 +183,24 @@ h2 {
     font-size: 0.9rem;
   }
 }
+
+/* Dynamic parameter fields */
+.query-section .param-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.query-section .param-field {
+  flex: 1 1 180px;
+  min-width: 160px;
+}
+
+.query-section .param-field label {
+  display: block;
+  font-size: 0.95rem;
+  color: #495057;
+  margin-bottom: 4px;
+}
+
