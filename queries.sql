@@ -40,6 +40,9 @@ COMMIT;
 
 
 
+SELECT name, schema_id FROM sys.procedures ORDER BY name;
+
+
 
 
 

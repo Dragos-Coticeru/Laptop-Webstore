@@ -4,7 +4,6 @@ from app.services import get_db_connection
 adminRoutes_blueprint = Blueprint('admin', __name__)
 
 def call_sp(cursor, sp_name, params=()):
-    # Generic EXEC helper for pyodbc + SQL Server
     placeholders = ",".join(["?"] * len(params))
     sql = f"EXEC {sp_name} {placeholders}" if placeholders else f"EXEC {sp_name}"
     cursor.execute(sql, params)
@@ -127,7 +126,6 @@ def add_laptop():
         try: cur.close(); conn.close()
         except: pass
 
-# Optional, since your JS has removeLaptopByName() calling this:
 @adminRoutes_blueprint.route('/admin/remove_laptop', methods=['POST'])
 def remove_laptop():
     data = request.json
@@ -155,9 +153,8 @@ REPORT_MAP = {
     "laptops_not_in_cart": "dbo.rpt_LaptopsNotInAnyCartAbovePrice",
     "categories_with_high_stock": "dbo.rpt_CategoriesWithHighStock_NotSold",
     "no_payment_users": "dbo.rpt_NoPaymentUsersSinceYear",
-    # new examples:
     "brand_revenue": "dbo.rpt_BrandRevenue",
-    "unsold_inventory_risk": "dbo.rpt_UnsoldInventoryRisk",  # takes 1 param: MinUnits
+    "unsold_inventory_risk": "dbo.rpt_UnsoldInventoryRisk",
 }
 
 REPORT_PARAMS = {
@@ -173,13 +170,12 @@ REPORT_PARAMS = {
     "categories_with_high_stock":[{"name":"MinPrice", "type":"decimal"}],
     "no_payment_users":       [{"name":"Year", "type":"int"}],
 
-    # examples with multiple params
+
     "brand_revenue": [
         {"name":"StartDate",  "type":"date"},
         {"name":"EndDate",    "type":"date"},
         {"name":"MinRevenue", "type":"decimal"}
     ],
-    # your 1-param SP version
     "unsold_inventory_risk": [{"name":"MinUnits","type":"int"}],
 }
 
@@ -191,8 +187,8 @@ def _cast(value, typ):
             return int(value)
         if typ == "decimal" or typ == "float":
             return float(value)
-        # for date we can pass string 'YYYY-MM-DD' to SQL Server
-        return value  # text/date default
+    
+        return value
     except:
         return value
 
@@ -203,7 +199,7 @@ def execute_query(query_name):
     if not sp_name:
         return jsonify({"success": False, "message": "Invalid query name."})
 
-    # Build ordered params from schema
+
     param_defs = REPORT_PARAMS.get(query_name, [])
     params = []
     for d in param_defs:
