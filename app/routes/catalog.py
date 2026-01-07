@@ -45,7 +45,7 @@ def search_laptops():
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("EXEC dbo.sp_SearchLaptops ?", [search_term])
-        laptops = [{"model_name": row[0], "price": row[1]} for row in cursor.fetchall()]
+        laptops = [{"LaptopID": row[0], "ModelName": row[1], "Price": row[2]} for row in cursor.fetchall()]
         cursor.close()
         conn.close()
         return jsonify({"success": True, "laptops": laptops})
@@ -62,7 +62,7 @@ def filter_laptops():
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("EXEC dbo.sp_FilterLaptopsByCategory ?", [category_name])
-        laptops = [{"model_name": row[0], "price": row[1]} for row in cursor.fetchall()]
+        laptops = [{"LaptopID": row[0], "ModelName": row[1], "Price": row[2]} for row in cursor.fetchall()]
         cursor.close()
         conn.close()
         return jsonify({"success": True, "laptops": laptops})
@@ -93,15 +93,10 @@ def get_cart_items():
         cart_id = session.get('CartID')
         if not cart_id:
             return jsonify({"success": False, "message": "No cart associated with the user."}), 403
+        
         conn = get_db_connection()
         cursor = conn.cursor()
-        query = """
-        SELECT L.ModelName, L.Price, CL.Quantity
-        FROM CartLaptops CL
-        JOIN Laptops L ON CL.LaptopID = L.LaptopID
-        WHERE CL.CartID = ?;
-        """
-        cursor.execute(query, [cart_id])
+        cursor.execute("EXEC dbo.sp_GetCartItems ?", [cart_id])
         cart_items = [
             {"model_name": row[0], "price": row[1], "quantity": row[2]}
             for row in cursor.fetchall()
@@ -122,14 +117,10 @@ def payment_page():
         user_id = session.get('UserID')
         if not user_id:
             return jsonify({"success": False, "message": "User is not logged in"}), 403
+        
         conn = get_db_connection()
         cursor = conn.cursor()
-        query_addresses = """
-        SELECT AddressID, Street, Number, City, PostalCode, Country, AddressType
-        FROM Addresses
-        WHERE UserID = ?;
-        """
-        cursor.execute(query_addresses, [user_id])
+        cursor.execute("EXEC dbo.sp_GetUserAddresses ?", [user_id])
         addresses = [
             {
                 "AddressID": row[0],
@@ -144,8 +135,10 @@ def payment_page():
         ]
         cursor.close()
         conn.close()
+        
         shipping_addresses = [addr for addr in addresses if addr["AddressType"] == "S"]
         billing_addresses = [addr for addr in addresses if addr["AddressType"] == "B"]
+        
         return render_template(
             'payment.html',
             shipping_addresses=shipping_addresses,
@@ -160,21 +153,14 @@ def myaccount():
         user_id = session.get('UserID')
         if not user_id:
             return jsonify({"success": False, "message": "User is not logged in"}), 403
+        
         conn = get_db_connection()
         cursor = conn.cursor()
-        query_user = """
-        SELECT FirstName, LastName, Email
-        FROM Users
-        WHERE UserID = ?;
-        """
-        cursor.execute(query_user, [user_id])
+        
+        cursor.execute("EXEC dbo.sp_GetUserDetails ?", [user_id])
         user = cursor.fetchone()
-        query_addresses = """
-        SELECT Street, Number, City, PostalCode, Country, AddressType
-        FROM Addresses
-        WHERE UserID = ?;
-        """
-        cursor.execute(query_addresses, [user_id])
+        
+        cursor.execute("EXEC dbo.sp_GetUserAddressesForAccount ?", [user_id])
         addresses = [
             {
                 "Street": row[0],
@@ -188,6 +174,7 @@ def myaccount():
         ]
         cursor.close()
         conn.close()
+        
         return render_template(
             'myaccount.html',
             user={"FirstName": user[0], "LastName": user[1], "Email": user[2]},
@@ -206,22 +193,22 @@ def submit_address():
         user_id = session.get('UserID')
         if not user_id:
             return jsonify({"success": False, "message": "User is not logged in"}), 403
+        
         street = request.form.get('street')
         number = request.form.get('number')
         city = request.form.get('city')
         postal_code = request.form.get('postalcode')
         country = request.form.get('country')
         address_type = request.form.get('type')
+        
         conn = get_db_connection()
         cursor = conn.cursor()
-        query = """
-        INSERT INTO Addresses (UserID, Street, Number, City, PostalCode, Country, AddressType)
-        VALUES (?, ?, ?, ?, ?, ?, ?);
-        """
-        cursor.execute(query, (user_id, street, number, city, postal_code, country, address_type))
+        cursor.execute("EXEC dbo.sp_AddAddress ?, ?, ?, ?, ?, ?, ?", 
+                      (user_id, street, number, city, postal_code, country, address_type))
         conn.commit()
         cursor.close()
         conn.close()
+        
         return redirect('/myaccount')
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
@@ -231,13 +218,9 @@ def get_address_details_by_street(street):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        query = """
-        SELECT Street, Number, City, PostalCode, Country
-        FROM Addresses
-        WHERE Street = ?;
-        """
-        cursor.execute(query, [street])
+        cursor.execute("EXEC dbo.sp_GetAddressDetailsByStreet ?", [street])
         row = cursor.fetchone()
+        
         if row:
             address = {
                 "Street": row[0],
@@ -246,8 +229,12 @@ def get_address_details_by_street(street):
                 "PostalCode": row[3],
                 "Country": row[4],
             }
+            cursor.close()
+            conn.close()
             return jsonify({"success": True, "address": address})
         else:
+            cursor.close()
+            conn.close()
             return jsonify({"success": False, "message": "Address not found"}), 404
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
@@ -258,22 +245,28 @@ def submit_payment():
         user_id = session.get('UserID')
         if not user_id:
             return jsonify({"success": False, "message": "User is not logged in"}), 403
+        
         data = request.get_json()
         if not data:
             return jsonify({"success": False, "message": "Invalid or missing JSON payload"}), 400
+        
         total_amount = data.get('total_amount')
         if total_amount is None or total_amount <= 0:
             return jsonify({"success": False, "message": "Invalid total amount provided."}), 400
+        
         cart_id = session.get('CartID')
         if not cart_id:
             return jsonify({"success": False, "message": "No cart associated with the user."}), 403
+        
         shipping_address_id = 2
+        
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("EXEC dbo.sp_SubmitOrder ?, ?, ?, ?", (user_id, cart_id, total_amount, shipping_address_id))
         conn.commit()
         cursor.close()
         conn.close()
+        
         return jsonify({"success": True, "message": "Order submitted successfully!"})
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500

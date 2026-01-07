@@ -16,10 +16,37 @@ function loadCategories() {
           const a = document.createElement('a');
           a.innerText = category;
           a.href = "#";
+          // Add click handler for filtering
+          a.onclick = (e) => {
+              e.preventDefault();
+              filterByCategory(category);
+          };
           dropdownContent.appendChild(a);
       });
   })
   .catch(error => console.error('Error:', error));
+}
+
+async function filterByCategory(categoryName) {
+  try {
+    const response = await fetch('/filter_laptops', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ category_name: categoryName }),
+    });
+    const data = await response.json();
+    if (data.success) {
+      displayLaptops(data.laptops);
+    } else {
+      console.error('Error filtering laptops:', data.message);
+      alert('Failed to filter laptops. Please try again.');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('An unexpected error occurred. Please try again.');
+  }
 }
 
 function displayLaptops(laptops) {
