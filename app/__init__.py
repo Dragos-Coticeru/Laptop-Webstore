@@ -4,17 +4,16 @@ from flask_session import Session
 def create_app():
     app = Flask(
         __name__,
-        static_folder='../static',  # Set the static folder path relative to the app
-        static_url_path='/static'   # URL path for serving static files
+        static_folder='../static',
+        static_url_path='/static'
     )
 
     # Set the secret key for session management
-    app.config['SECRET_KEY'] = 'your_secure_secret_key'  # Replace with a secure key in production
-    app.config['SESSION_TYPE'] = 'filesystem'  # Store session data in the filesystem
-    app.config['SESSION_PERMANENT'] = False    # Session will not persist after the browser is closed
-    app.config['SESSION_USE_SIGNER'] = True    # Adds an additional layer of security by signing the session ID
+    app.config['SECRET_KEY'] = 'your_secure_secret_key'
+    app.config['SESSION_TYPE'] = 'filesystem'
+    app.config['SESSION_PERMANENT'] = False
+    app.config['SESSION_USE_SIGNER'] = True
 
-    # Initialize Flask-Session
     Session(app)
 
     # Import and register blueprints
@@ -27,6 +26,5 @@ def create_app():
     app.register_blueprint(catalog_blueprint)
     app.register_blueprint(create_user_blueprint)
     app.register_blueprint(adminRoutes_blueprint)
-    #app.register_blueprint(catalog_blueprint)
 
     return app
