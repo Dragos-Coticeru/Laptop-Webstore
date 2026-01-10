@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // Add User Form
     document.getElementById("addUserForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       const formData = new FormData(event.target);
@@ -13,7 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
       alert(result.message);
     });
   
-    // Remove User Form
     document.getElementById("removeUserForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       const email = new FormData(event.target).get("email");
@@ -26,7 +24,6 @@ document.addEventListener("DOMContentLoaded", () => {
       alert(result.message);
     });
   
-    // Modify User Form
     document.getElementById("modifyUserForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       const formData = new FormData(event.target);
@@ -40,7 +37,6 @@ document.addEventListener("DOMContentLoaded", () => {
       alert(result.message);
     });
   
-    // Add Category Form
     document.getElementById("addCategoryForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       const formData = new FormData(event.target);
@@ -54,7 +50,6 @@ document.addEventListener("DOMContentLoaded", () => {
       alert(result.message);
     });
 
-    // Remove Category
     document.getElementById("removeCategoryForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       const categoryName = new FormData(event.target).get("categoryName");
@@ -67,7 +62,6 @@ document.addEventListener("DOMContentLoaded", () => {
       alert(result.message);
     });
 
-    // Update Category
     document.getElementById("updateCategoryForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       const formData = new FormData(event.target);
@@ -82,7 +76,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
   
-    // Add Laptop Form
     document.getElementById("addLaptopForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       const formData = new FormData(event.target);
@@ -95,8 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await response.json();
       alert(result.message);
     });
-  
-    // Remove Laptop Form
+
   });
   
 
@@ -111,14 +103,14 @@ function removeLaptopByName() {
     fetch('/admin/remove_laptop', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json', // Specify JSON format
+            'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ModelName: modelName }), // Send data as JSON
+        body: JSON.stringify({ ModelName: modelName }),
     })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(data.message); // Success feedback
+                alert(data.message);
             } else {
                 console.error(data.message);
                 alert(`Error: ${data.message}`);
@@ -137,9 +129,8 @@ async function executeQuery(queryName) {
   
       if (data.success) {
         const resultsTable = document.getElementById('results-table');
-        resultsTable.innerHTML = ''; // Clear previous results
+        resultsTable.innerHTML = '';
   
-        // Create table headers
         if (data.results.length > 0) {
           const headers = Object.keys(data.results[0]);
           const headerRow = document.createElement('tr');
@@ -150,7 +141,6 @@ async function executeQuery(queryName) {
           });
           resultsTable.appendChild(headerRow);
   
-          // Populate table rows
           data.results.forEach(row => {
             const tr = document.createElement('tr');
             Object.values(row).forEach(value => {
@@ -171,7 +161,6 @@ async function executeQuery(queryName) {
     }
   }
 
-  // REPLACE queryLabels with this:
 const REPORT_PARAMS = {
   laptops_by_brand: [{name:"BrandName", label:"Brand Name", type:"text", placeholder:"e.g. Dell"}],
   popular_brands: [{name:"MinCount", label:"Minimum Laptops in Brand", type:"number"}],
@@ -185,13 +174,23 @@ const REPORT_PARAMS = {
   categories_with_high_stock: [{name:"MinPrice", label:"Minimum Price", type:"number", step:"0.01"}],
   no_payment_users: [{name:"Year", label:"Year (e.g. 2024)", type:"number"}],
 
-  // EXAMPLES with variable param counts:
   brand_revenue: [
     {name:"StartDate",  label:"Start Date", type:"date"},
     {name:"EndDate",    label:"End Date", type:"date"},
     {name:"MinRevenue", label:"Minimum Revenue", type:"number", step:"0.01"}
   ],
-  unsold_inventory_risk: [{name:"MinUnits", label:"Minimum Units in Stock", type:"number"}]
+  unsold_inventory_risk: [{name:"MinUnits", label:"Minimum Units in Stock", type:"number"}],
+  monthly_category_revenue: [
+    {name:"Year", label:"Year (e.g. 2024)", type:"number"}
+  ],
+  restock_advice: [
+    {name:"SafetyStockThreshold", label:"Safety Stock Level", type:"number"}
+  ],
+  vip_brand_affinity: [
+    {name:"StartDate", label:"Start Date", type:"date"},
+    {name:"EndDate", label:"End Date", type:"date"},
+    {name:"MinTotalSpend", label:"Minimum Total Spent", type:"number", step:"0.01"}
+  ]
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -199,9 +198,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const queryInputContainer = document.getElementById("query-input-container");
   const executeQueryButton = document.getElementById("execute-query-button");
 
-  // Render param inputs for selected report
   function renderParamFields(reportKey) {
-    queryInputContainer.innerHTML = ""; // clear
+    queryInputContainer.innerHTML = "";
     const defs = REPORT_PARAMS[reportKey] || [];
     if (defs.length === 0) {
       queryInputContainer.style.display = "none";
@@ -235,7 +233,6 @@ document.addEventListener("DOMContentLoaded", () => {
     queryInputContainer.appendChild(row);
   }
 
-  // Initial + on change
   renderParamFields(querySelect.value);
   executeQueryButton.style.display = "block";
 
@@ -244,7 +241,6 @@ document.addEventListener("DOMContentLoaded", () => {
     executeQueryButton.style.display = "block";
   });
 
-  // Execute with ALL params in querystring, in order
   executeQueryButton.addEventListener("click", async () => {
     const reportKey = querySelect.value;
     const defs = REPORT_PARAMS[reportKey] || [];

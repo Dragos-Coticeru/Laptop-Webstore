@@ -140,7 +140,7 @@ def remove_laptop():
         try: cur.close(); conn.close()
         except: pass
 
-# ----- Reports -----
+# Reports 
 REPORT_MAP = {
     "laptops_by_brand": "dbo.rpt_LaptopsByBrand",
     "popular_brands": "dbo.rpt_PopularBrands",
@@ -155,6 +155,9 @@ REPORT_MAP = {
     "no_payment_users": "dbo.rpt_NoPaymentUsersSinceYear",
     "brand_revenue": "dbo.rpt_BrandRevenue",
     "unsold_inventory_risk": "dbo.rpt_UnsoldInventoryRisk",
+    "monthly_category_revenue": "rpt_MonthlyCategoryRevenue",
+    "restock_advice": "rpt_RestockAdvice",
+    "vip_brand_affinity": "rpt_VipBrandAffinity"
 }
 
 REPORT_PARAMS = {
@@ -177,6 +180,13 @@ REPORT_PARAMS = {
         {"name":"MinRevenue", "type":"decimal"}
     ],
     "unsold_inventory_risk": [{"name":"MinUnits","type":"int"}],
+    "monthly_category_revenue": [{"name":"Year", "type":"int"}],
+    "restock_advice": [{"name":"SafetyStockThreshold", "type":"int"}],
+    "vip_brand_affinity": [
+        {"name":"StartDate", "type":"date"},
+        {"name":"EndDate", "type":"date"},
+        {"name":"MinTotalSpend", "type":"decimal"}
+    ]
 }
 
 def _cast(value, typ):
