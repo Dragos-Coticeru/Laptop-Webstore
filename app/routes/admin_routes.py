@@ -157,7 +157,9 @@ REPORT_MAP = {
     "unsold_inventory_risk": "dbo.rpt_UnsoldInventoryRisk",
     "monthly_category_revenue": "rpt_MonthlyCategoryRevenue",
     "restock_advice": "rpt_RestockAdvice",
-    "vip_brand_affinity": "rpt_VipBrandAffinity"
+    "vip_brand_affinity": "rpt_VipBrandAffinity",
+    "loyalty_reward_tiers": "dbo.rpt_LoyaltyRewardTiers",
+    "lagging_flagships": "dbo.rpt_LaggingFlagshipProducts"
 }
 
 REPORT_PARAMS = {
@@ -186,6 +188,13 @@ REPORT_PARAMS = {
         {"name":"StartDate", "type":"date"},
         {"name":"EndDate", "type":"date"},
         {"name":"MinTotalSpend", "type":"decimal"}
+    ],
+    "loyalty_reward_tiers": [
+        {"name":"MinTotalSpend", "type":"decimal"},
+        {"name":"LookbackDate", "type":"date"}
+    ],
+    "lagging_flagships": [
+        {"name":"MinPrice", "type":"decimal"}
     ]
 }
 

@@ -18,7 +18,9 @@ const CHART_CONFIG = {
     "regional_top_selling": { labelKey: "CompositeLabel", dataKey: "TotalRevenue", type: "bar", title: "Top Selling by Region" }, 
     "monthly_category_revenue": { labelKey: "CompositeLabel", dataKey: "TotalRevenue", type: "line", title: "Revenue Trends" },
     "restock_advice": { labelKey: "ModelName", dataKey: "StockQuantity", type: "bar", title: "Stock vs Safety Level" },
-    "vip_brand_affinity": { labelKey: "CustomerName", dataKey: "TotalUserSpend", type: "bar", title: "VIP Spending" }
+    "vip_brand_affinity": { labelKey: "CustomerName", dataKey: "TotalUserSpend", type: "bar", title: "VIP Spending" },
+    "loyalty_reward_tiers": { labelKey: "CustomerName", dataKey: "TotalSpent", type: "bar", title: "Loyalty Candidates Spending" },
+    "lagging_flagships": { labelKey: "ModelName", dataKey: "TotalUnitsSold", type: "bar", title: "Sales of Expensive Models vs Avg" }
 };
 
 const REPORT_PARAMS = {
@@ -55,7 +57,14 @@ const REPORT_PARAMS = {
   regional_top_selling: [
     { name: "StartDate", label: "Start Date", type: "date" },
     { name: "EndDate", label: "End Date", type: "date" }
-  ]
+  ],
+  loyalty_reward_tiers: [
+        { name: "MinTotalSpend", label: "Minimum Total Spend", type: "number", step: "0.01" },
+        { name: "LookbackDate", label: "Orders Since", type: "date" }
+    ],
+    lagging_flagships: [
+        { name: "MinPrice", label: "Minimum Product Price", type: "number", step: "0.01" }
+    ]
 };
 
 document.addEventListener("DOMContentLoaded", () => {
